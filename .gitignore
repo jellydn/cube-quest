@@ -1,0 +1,6 @@
+# Environment
+.env
+
+# Amp runtime artifacts
+.amp/portals/
+.amp/in/

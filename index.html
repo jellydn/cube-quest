@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Cube Quest — Learn Rubik's Cube!</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎲</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+
+  <!-- ========== HEADER ========== -->
+  <header class="app-header">
+    <div class="header-content">
+      <h1 class="logo">🎲 Cube Quest</h1>
+      <div class="progress-bar-container">
+        <div class="progress-bar-track">
+          <div class="progress-bar-fill" id="progress-fill"></div>
+        </div>
+        <span class="progress-text" id="progress-text">0 / 7 steps</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ========== MAIN LAYOUT ========== -->
+  <div class="app-layout">
+
+    <!-- ===== 3D CUBE VIEWER ===== -->
+    <aside class="cube-viewer" id="cube-viewer">
+      <div id="cube-canvas-container"></div>
+
+      <!-- Speed control -->
+      <div class="speed-control">
+        <label for="speed-slider">🐢 Speed</label>
+        <input type="range" id="speed-slider" min="150" max="800" value="400" step="50">
+        <span class="speed-label">🐰</span>
+      </div>
+
+      <!-- Quick action buttons -->
+      <div class="cube-quick-actions">
+        <button class="btn btn-scramble" id="btn-scramble">🔀 Scramble</button>
+        <button class="btn btn-reset" id="btn-reset">🔄 Reset</button>
+      </div>
+
+      <!-- Current move display -->
+      <div class="current-move-display" id="current-move-display" style="display:none;">
+        <span class="current-move-label">Now doing:</span>
+        <span class="current-move-chip" id="current-move-chip">R</span>
+      </div>
+
+      <!-- Move history -->
+      <div class="move-history-container">
+        <span class="move-history-label">Moves:</span>
+        <div class="move-history" id="move-history"></div>
+      </div>
+    </aside>
+
+    <!-- ===== CONTENT AREA ===== -->
+    <main class="content-area">
+
+      <!-- Tab navigation -->
+      <nav class="tabs">
+        <button class="tab active" data-tab="learn">📚 Learn</button>
+        <button class="tab" data-tab="practice">🎮 Practice</button>
+        <button class="tab" data-tab="moves">🔤 Moves</button>
+        <button class="tab" data-tab="tips">💡 Tips</button>
+        <button class="tab" data-tab="videos">🎬 Videos</button>
+      </nav>
+
+      <!-- ===== LEARN TAB ===== -->
+      <section class="tab-content active" id="tab-learn">
+        <div class="learn-header">
+          <h2>Learn Step by Step! 🌟</h2>
+          <p class="learn-subtitle">Take it one step at a time. Learn a new move each day!</p>
+        </div>
+
+        <!-- Step navigation dots -->
+        <div class="step-dots" id="step-dots"></div>
+
+        <!-- Step content (dynamically generated) -->
+        <div class="step-content" id="step-content"></div>
+
+        <!-- Step navigation buttons -->
+        <div class="step-nav">
+          <button class="btn btn-secondary" id="btn-prev-step">← Previous</button>
+          <button class="btn btn-complete" id="btn-complete-step">⭐ Mark Complete</button>
+          <button class="btn btn-secondary" id="btn-next-step">Next →</button>
+        </div>
+      </section>
+
+      <!-- ===== PRACTICE TAB ===== -->
+      <section class="tab-content" id="tab-practice">
+        <h2>🎮 Practice Mode</h2>
+        <p class="tab-intro">Scramble the cube and try to solve it! Use the buttons below to make moves.</p>
+
+        <div class="practice-stats">
+          <div class="stat-card">
+            <span class="stat-value" id="move-count">0</span>
+            <span class="stat-label">Moves</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-value" id="timer">0:00</span>
+            <span class="stat-label">Time</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-value" id="solved-status">—</span>
+            <span class="stat-label">Status</span>
+          </div>
+        </div>
+
+        <div class="practice-actions">
+          <button class="btn btn-scramble btn-large" id="btn-practice-scramble">🔀 Scramble Cube</button>
+          <button class="btn btn-reset btn-large" id="btn-practice-reset">🔄 Reset Cube</button>
+          <button class="btn btn-undo btn-large" id="btn-undo">↩️ Undo Last Move</button>
+        </div>
+
+        <h3>Make Your Moves!</h3>
+        <div class="move-buttons-grid" id="move-buttons-grid"></div>
+      </section>
+
+      <!-- ===== MOVE GUIDE TAB ===== -->
+      <section class="tab-content" id="tab-moves">
+        <h2>🔤 Move Guide</h2>
+        <p class="tab-intro">Each letter tells you which face to turn. Let's learn them!</p>
+
+        <div class="move-guide-grid">
+          <div class="move-guide-card" style="--card-color:#e74c3c;">
+            <div class="move-guide-letter">R</div>
+            <div class="move-guide-name">Right</div>
+            <p>Turn the <strong>right</strong> face clockwise</p>
+          </div>
+          <div class="move-guide-card" style="--card-color:#ff8c00;">
+            <div class="move-guide-letter">L</div>
+            <div class="move-guide-name">Left</div>
+            <p>Turn the <strong>left</strong> face clockwise</p>
+          </div>
+          <div class="move-guide-card" style="--card-color:#95a5a6;">
+            <div class="move-guide-letter">U</div>
+            <div class="move-guide-name">Up</div>
+            <p>Turn the <strong>top</strong> face clockwise</p>
+          </div>
+          <div class="move-guide-card" style="--card-color:#f1c40f;">
+            <div class="move-guide-letter">D</div>
+            <div class="move-guide-name">Down</div>
+            <p>Turn the <strong>bottom</strong> face clockwise</p>
+          </div>
+          <div class="move-guide-card" style="--card-color:#2ecc71;">
+            <div class="move-guide-letter">F</div>
+            <div class="move-guide-name">Front</div>
+            <p>Turn the <strong>front</strong> face clockwise</p>
+          </div>
+          <div class="move-guide-card" style="--card-color:#3498db;">
+            <div class="move-guide-letter">B</div>
+            <div class="move-guide-name">Back</div>
+            <p>Turn the <strong>back</strong> face clockwise</p>
+          </div>
+        </div>
+
+        <div class="move-guide-extra">
+          <div class="move-guide-symbols">
+            <div class="symbol-card">
+              <div class="symbol-icon">⟲</div>
+              <div class="symbol-text">
+                <strong>The apostrophe (')</strong>
+                <p>Means turn <strong>counter-clockwise</strong> instead of clockwise.</p>
+                <p class="example">R' = Right face counter-clockwise</p>
+              </div>
+            </div>
+            <div class="symbol-card">
+              <div class="symbol-icon">②</div>
+              <div class="symbol-text">
+                <strong>The number 2</strong>
+                <p>Means turn the face <strong>twice</strong> (180 degrees).</p>
+                <p class="example">R2 = Right face turned twice</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="move-guide-tip">
+          <p>💡 <strong>Quick tip:</strong> Say the moves out loud as you do them! "Right, Up, Right-prime, Up-prime"</p>
+        </div>
+      </section>
+
+      <!-- ===== TIPS TAB ===== -->
+      <section class="tab-content" id="tab-tips">
+        <h2>💡 Tips for Kids</h2>
+        <p class="tab-intro">Follow these tips and you'll be a cube master in no time!</p>
+
+        <div class="tips-list">
+          <div class="tip-card">
+            <div class="tip-icon">📅</div>
+            <div class="tip-body">
+              <h3>One step a day</h3>
+              <p>Learn one step each day instead of trying everything at once. Your brain needs time to remember!</p>
+            </div>
+          </div>
+          <div class="tip-card">
+            <div class="tip-icon">⏱️</div>
+            <div class="tip-body">
+              <h3>Practice 10–15 minutes daily</h3>
+              <p>Short practice every day is better than a long session once a week. 10 to 15 minutes is perfect!</p>
+            </div>
+          </div>
+          <div class="tip-card">
+            <div class="tip-icon">🗣️</div>
+            <div class="tip-body">
+              <h3>Say the moves aloud</h3>
+              <p>Saying the moves helps you remember them. Try it!</p>
+              <ul class="move-sayings">
+                <li><strong>R</strong> = Right</li>
+                <li><strong>L</strong> = Left</li>
+                <li><strong>U</strong> = Up</li>
+                <li><strong>F</strong> = Front</li>
+                <li><strong>'</strong> = Counter-clockwise</li>
+                <li><strong>2</strong> = Turn twice</li>
+              </ul>
+            </div>
+          </div>
+          <div class="tip-card">
+            <div class="tip-icon">🧘</div>
+            <div class="tip-body">
+              <h3>Don't rush</h3>
+              <p>Going slow is okay! Focus on getting it right, not getting it fast. Speed comes later!</p>
+            </div>
+          </div>
+          <div class="tip-card">
+            <div class="tip-icon">🎉</div>
+            <div class="tip-body">
+              <h3>Celebrate small wins</h3>
+              <p>Finished the white cross? Awesome! Be proud of each step. Every step gets you closer to solving the whole cube!</p>
+            </div>
+          </div>
+          <div class="tip-card">
+            <div class="tip-icon">🏆</div>
+            <div class="tip-body">
+              <h3>You can do it!</h3>
+              <p>Most kids can solve the cube by themselves after 3–7 days of short daily practice. Stick with it and you'll get there!</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== VIDEOS TAB ===== -->
+      <section class="tab-content" id="tab-videos">
+        <h2>🎬 Best Kid-Friendly Videos</h2>
+        <p class="tab-intro">These YouTube tutorials are super helpful. Ask a grown-up to watch with you!</p>
+
+        <div class="video-cards">
+          <div class="video-card">
+            <div class="video-thumbnail" style="background: linear-gradient(135deg, #e74c3c, #f39c12);">
+              <span class="video-play">▶</span>
+              <span class="video-badge">Most Popular</span>
+            </div>
+            <div class="video-info">
+              <h3>J Perm — Beginner's Method</h3>
+              <p>Clear and easy to follow. One of the best teachers on YouTube!</p>
+              <a href="https://www.youtube.com/watch?v=7Ron6MN45LY" target="_blank" rel="noopener" class="btn btn-video">Watch on YouTube →</a>
+            </div>
+          </div>
+          <div class="video-card">
+            <div class="video-thumbnail" style="background: linear-gradient(135deg, #9b59b6, #3498db);">
+              <span class="video-play">▶</span>
+              <span class="video-badge">Fast & Fun</span>
+            </div>
+            <div class="video-info">
+              <h3>CubeHead — Learn in Under 20 Minutes</h3>
+              <p>Quick and fun! Great for kids who want to learn fast.</p>
+              <a href="https://www.youtube.com/watch?v=PW2J8IblczM" target="_blank" rel="noopener" class="btn btn-video">Watch on YouTube →</a>
+            </div>
+          </div>
+          <div class="video-card">
+            <div class="video-thumbnail" style="background: linear-gradient(135deg, #2ecc71, #1abc9c);">
+              <span class="video-play">▶</span>
+              <span class="video-badge">Classic</span>
+            </div>
+            <div class="video-info">
+              <h3>WIRED — How to Solve a Rubik's Cube</h3>
+              <p>A great introduction that explains everything clearly.</p>
+              <a href="https://www.youtube.com/watch?v=R-R0KrXvWbc" target="_blank" rel="noopener" class="btn btn-video">Watch on YouTube →</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Celebration overlay -->
+  <div class="celebration" id="celebration">
+    <div class="celebration-content">
+      <h2>🎉 You did it! 🎉</h2>
+      <p>You completed all 7 steps!</p>
+      <p class="celebration-subtitle">You're a Cube Master! 🏆</p>
+      <button class="btn btn-primary" id="btn-celebration-close">Awesome!</button>
+    </div>
+    <div class="confetti" id="confetti"></div>
+  </div>
+
+  <!-- Loading overlay -->
+  <div class="loading" id="loading">
+    <div class="loading-content">
+      <div class="loading-cube">🎲</div>
+      <p>Loading Cube Quest...</p>
+    </div>
+  </div>
+
+  <script type="module" src="cube.js"></script>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

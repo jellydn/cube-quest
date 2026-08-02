@@ -1,0 +1,5 @@
+services:
+  web:
+    command: python3 -m http.server ${PORT}
+    port: 3000
+    portal: true
